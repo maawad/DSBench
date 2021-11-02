@@ -1,9 +1,12 @@
+#ifdef _WIN32
+#include <ciso646>
+#endif
+
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/sequence.h>
 #include <thrust/transform.h>
 #include <cuda_helpers.cuh>
-
 
 #include <filesystem>
 #include <iostream>
@@ -12,38 +15,37 @@
 #include <gpu_timer.hpp>
 #include <rkg.hpp>
 
-
 #include <cmd.hpp>
 
-
 void output_rates(float insertion_seconds,
-                          float find_seconds,
-                          std::size_t num_insertions,
-                          std::size_t num_finds,
-                          float load_factor){
+                  float find_seconds,
+                  std::size_t num_insertions,
+                  std::size_t num_finds,
+                  float load_factor) {
+  std::cout << "Insertions: " << num_insertions << " keys" << '\n';
+  double insertion_rate = double(num_insertions) * 1e-6 / insertion_seconds;
+  std::cout << "Insertion_rate: " << insertion_rate << " Mkey/s";
+  std::cout << " (" << insertion_seconds << " seconds)"
+            << "\n\n";
+  std::cout << "Finds: " << num_finds << " keys" << '\n';
+  double find_rate = double(num_finds) * 1e-6 / find_seconds;
+  std::cout << "find_rate: " << find_rate << " Mkey/s";
+  std::cout << " (" << find_seconds << " seconds)"
+            << "\n\n";
 
-    std::cout << "Insertions: " << num_insertions << " keys" << '\n';
-    double insertion_rate = double(num_insertions) * 1e-6 / insertion_seconds;
-    std::cout << "Insertion_rate: " << insertion_rate << " Mkey/s";
-    std::cout << " (" << insertion_seconds << " seconds)" << "\n\n";
-    std::cout << "Finds: " << num_finds << " keys" << '\n';
-    double find_rate = double(num_finds) * 1e-6 / find_seconds;
-    std::cout << "find_rate: " << find_rate << " Mkey/s" ;
-    std::cout << " (" << find_seconds << " seconds)" << "\n\n";
+  // print to file
+  std::string result_dir = "./";
+  std::string result_fname = "cuco.csv";
 
-    // print to file
-    std::string result_dir = "./";
-    std::string result_fname = "cuco.csv";
+  bool output_file_exist = std::filesystem::exists(result_dir + result_fname);
 
-    bool output_file_exist = std::filesystem::exists(result_dir + result_fname);
-
-    std::fstream output(result_dir + result_fname, std::ios::app);
-    if (!output_file_exist) {
-      // header
-      output << "num_insertions, num_finds, load_factor,";
-      output << "insert,";
-      output << "find,\n";
-    }
+  std::fstream output(result_dir + result_fname, std::ios::app);
+  if (!output_file_exist) {
+    // header
+    output << "num_insertions, num_finds, load_factor,";
+    output << "insert,";
+    output << "find,\n";
+  }
 
   output << num_insertions << ",";
   output << num_finds << ",";
@@ -73,13 +75,12 @@ int main(int argc, char** argv) {
   using map_type = cuco::static_map<key_type, value_type>;
   pair_type sentinel{0, 0};
 
- auto key_to_pair = [] __host__ __device__(key_type x) { return pair_type{x,x % 512}; };
+  auto key_to_pair = [] __host__ __device__(key_type x) { return pair_type{x, x % 512}; };
 
   // generate keys
   thrust::device_vector<key_type> d_keys(num_keys);
   std::vector<key_type> h_keys(num_keys);
   thrust::device_vector<pair_type> d_pairs(num_keys);
-
 
   // Generate keys
   DSBench::rkg::generate_uniform_unique_keys(h_keys, num_keys, true, sentinel.first, 1);
@@ -118,16 +119,13 @@ int main(int argc, char** argv) {
     auto key = h_queries[i];
     auto expected_pair = key_to_pair(key);
     auto found_result = h_results[i];
-    if (expected_pair.second!= found_result) {
-      std::cout << "Error: expected: " <<expected_pair.second;
+    if (expected_pair.second != found_result) {
+      std::cout << "Error: expected: " << expected_pair.second;
       std::cout << ", found: " << found_result << '\n';
       return 1;
     }
   }
   std::cout << "Success\n";
 
-
-
   return 0;
-
 }
