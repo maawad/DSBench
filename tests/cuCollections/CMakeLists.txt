@@ -21,6 +21,7 @@ file(TO_NATIVE_PATH ${cuco_includes} cuco_includes_native)
 add_executable(test_cuco test_cuco.cu)
 set_target_properties(test_cuco PROPERTIES
 								FOLDER "tests")
+set_target_properties(test_cuco PROPERTIES CUDA_ARCHITECTURES ${CUDA_ARCHS})
 target_link_libraries(test_cuco PRIVATE dsbench
                                 PRIVATE cuco)
 

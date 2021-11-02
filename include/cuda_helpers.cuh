@@ -1,6 +1,5 @@
 #pragma once
 namespace DSBench {
-namespace detail {
 #define cuda_try(call)                                                         \
   do {                                                                         \
     cudaError_t err = call;                                                    \
@@ -11,7 +10,7 @@ namespace detail {
     }                                                                          \
   } while (0)
 
-_device_ void cuda_assert(bool expression_result, char *message = nullptr) {
+__device__ void cuda_assert(bool expression_result, char *message = nullptr) {
   if (!expression_result) {
     if (message && (threadIdx.x & 0x1f == 0)) {
       printf("assert failed: %s", message);
@@ -20,7 +19,6 @@ _device_ void cuda_assert(bool expression_result, char *message = nullptr) {
     asm("trap;");
   }
 }
-} // namespace detail
 
 void set_device(int device_id) {
   int device_count;

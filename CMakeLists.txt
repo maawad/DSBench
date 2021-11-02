@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_policy(SET CMP0104 OLD)
 
 project(DSBench LANGUAGES CXX CUDA)
 
 # Set c++ standard
 set(CMAKE_CXX_STANDARD 17)
+
+# Direct all output to /bin directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 # tools
 find_package(CUDAToolkit REQUIRED)
@@ -52,9 +56,10 @@ set(CUDA_FLAGS
     $<IF:$<CONFIG:Debug>,
         -G -src-in-ptx,
         -lineinfo>
-    ${CUDA_ARCHS}
+    # ${CUDA_ARCHS}
 	--expt-extended-lambda
     -Wno-deprecated-gpu-targets #silence deprecated architectures
+    --expt-relaxed-constexpr
     $<$<CONFIG:Release>:-Xptxas -warn-spills -res-usage>
     )
 
@@ -73,6 +78,8 @@ target_include_directories(dsbench
 target_link_libraries(dsbench
     INTERFACE CUDA::cuda_driver
     INTERFACE CUDA::cudart_static)
+
+
 
 # visual studio setup
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
