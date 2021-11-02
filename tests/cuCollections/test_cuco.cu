@@ -1,5 +1,7 @@
 #ifdef _WIN32
+#include <Windows.h>
 #include <ciso646>
+#undef DUPLICATE
 #endif
 
 #include <thrust/device_vector.h>
